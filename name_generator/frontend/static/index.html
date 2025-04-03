@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Name Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #000000 0%, #757575 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        .name-item:hover {
+            background: linear-gradient(135deg, #f6f9ff 0%, #f1f4ff 100%);
+            transform: translateX(8px);
+            transition: all 0.3s ease;
+        }
+        .custom-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+        .custom-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid hsl(0, 0%, 28%);
+            border-top: 4px solid #000000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-5xl font-bold text-center text-white mb-2">Brand Name Generator</h1>
+        <p class="text-center text-blue-100 mb-12 text-lg">Create unique and memorable brand names for your business</p>
+        
+        <!-- Model Selector -->
+        <div class="max-w-md mx-auto mb-8">
+            <label for="model-select" class="block text-sm font-medium text-white mb-2">Select Name Generation Model</label>
+            <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="ollama">Ollama Mistral (Local LLM, Requires Ollama Installation)</option>
+                <option value="openai">OpenAI GPT-3.5 Turbo (Most Creative, Requires API Key)</option>
+                <option value="huggingface">Hugging Face SmollAgent (Good Balance, Requires API Key)</option>
+                <option value="local">Local Pattern Generator (Fastest, No API Key Required)</option>
+            </select>
+        </div>
+
+        <div class="max-w-2xl mx-auto glass-effect rounded-xl shadow-lg p-8 mb-8">
+            <form id="nameForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-indigo-900 mb-2">Industry</label>
+                    <input type="text" id="industry" required value="Interior Design & Architecture"
+                        class="custom-input mt-1 block w-full rounded-lg px-4 py-3 text-gray-700 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-indigo-900 mb-2">Keywords (comma-separated)</label>
+                    <input type="text" id="keywords" required value="two words, modern, playful, artistic, modern art"
+                        class="custom-input mt-1 block w-full rounded-lg px-4 py-3 text-gray-700 focus:outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-indigo-900 mb-2">Tone</label>
+                    <select id="tone" required
+                        class="custom-input mt-1 block w-full rounded-lg px-4 py-3 text-gray-700 focus:outline-none">
+                        <option value="professional">Professional</option>
+                        <option value="playful">Playful</option>
+                        <option value="luxury">Luxury</option>
+                        <option value="modern" selected>Modern</option>
+                        <option value="classic">Classic</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-indigo-900 mb-2">Target Audience (optional)</label>
+                    <input type="text" id="audience"
+                        class="custom-input mt-1 block w-full rounded-lg px-4 py-3 text-gray-700 focus:outline-none">
+                </div>
+                
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-[1.02] transition-all">
+                    Generate Names
+                </button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p class="text-gray-700">Generating names...</p>
+            </div>
+        </div>
+
+        <div id="results" class="hidden max-w-2xl mx-auto">
+            <h2 class="text-2xl font-semibold text-white mb-6">Generated Names</h2>
+            <div id="namesList" class="glass-effect rounded-xl shadow-lg p-6 space-y-2">
+                <!-- Names will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://localhost:8000';
+        const form = document.getElementById('nameForm');
+        const results = document.getElementById('results');
+        const namesList = document.getElementById('namesList');
+        const loading = document.getElementById('loading');
+        const modelSelect = document.getElementById('model-select');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show loading state
+            loading.style.display = 'block';
+            results.classList.add('hidden');
+            
+            try {
+                const formData = {
+                    industry: document.getElementById('industry').value,
+                    keywords: document.getElementById('keywords').value.split(',').map(k => k.trim()),
+                    tone: document.getElementById('tone').value,
+                    audience: document.getElementById('audience').value,
+                    generator_type: modelSelect.value
+                };
+
+                console.log('Sending request:', formData);
+                
+                const response = await fetch(`${API_URL}/generate-names`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to generate names');
+                }
+
+                const data = await response.json();
+                console.log('Received data:', data);
+                
+                // Display results
+                namesList.innerHTML = data.names.map((name, index) => 
+                    `<div class="name-item p-4 rounded-lg">
+                        <p class="text-indigo-900 text-lg">${index + 1}. ${name}</p>
+                    </div>`
+                ).join('');
+                
+                results.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 
