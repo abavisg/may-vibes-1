@@ -1,4 +1,4 @@
-# 🧠 May AI Vibes – Day X: Brand Name Generator Agent  
+# 🧠 May AI Vibes – Day 1: Brand Name Generator Agent  
 > Hashtag: **#may-ai-vibes**  
 > Project: Build an AI agent that generates 100 business name ideas with `.com` domain availability and no UK LTD conflict.  
 > Goal: Publish a blog post + LinkedIn breakdown after the build.

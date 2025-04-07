@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 import random
 import logging
 import os
@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from abc import ABC, abstractmethod
 import openai
 import json
-#from smolagents import MultiStepAgent
+from .base_agent import BaseAgent
+from smolagents import MultiStepAgent
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -300,3 +301,75 @@ class NameGeneratorFactory:
 
 # Create a singleton instance
 name_generator_factory = NameGeneratorFactory()
+
+class NameGeneratorAgent(BaseAgent):
+    """
+    Agent responsible for generating brand names
+    """
+    
+    def __init__(self, generator_type: str = "local"):
+        """
+        Initialize the name generator agent
+        
+        Args:
+            generator_type: The type of generator to use (local, openai, huggingface, ollama)
+        """
+        super().__init__("NameGenerator")
+        self.generator_type = generator_type
+        self.generator = self._create_generator(generator_type)
+        self.log(f"Initialized with generator type: {generator_type}")
+    
+    def execute(self, data: Dict[str, Any]) -> List[str]:
+        """
+        Execute the name generation process
+        
+        Args:
+            data: Dictionary containing:
+                - industry: The industry for the brand
+                - keywords: List of keywords
+                - tone: The tone of the brand
+                - audience: The target audience (optional)
+                
+        Returns:
+            List of generated brand names
+        """
+        industry = data.get("industry", "")
+        keywords = data.get("keywords", [])
+        tone = data.get("tone", "")
+        audience = data.get("audience", None)
+        
+        self.log(f"Generating names for industry: {industry}, tone: {tone}")
+        
+        # Generate names
+        names = self.generator.generate_names(industry, keywords, tone, audience)
+        
+        # Ensure we have exactly 100 names
+        while len(names) < 100:
+            additional_names = self.generator.generate_names(industry, keywords, tone, audience)
+            names.extend(additional_names[:100 - len(names)])
+        
+        self.log(f"Generated {len(names)} names")
+        self.log(f"NAMES is Array: {isinstance(names, list)}")
+        return names
+    
+    def _create_generator(self, generator_type: str):
+        """
+        Create the appropriate name generator based on the type
+        
+        Args:
+            generator_type: The type of generator to create
+            
+        Returns:
+            A name generator instance
+        """
+        if generator_type == "local":
+            return LocalNameGenerator()
+        elif generator_type == "openai":
+            return OpenAINameGenerator()
+        elif generator_type == "huggingface":
+            return HuggingFaceNameGenerator()
+        elif generator_type == "ollama":
+            return OllamaNameGenerator()
+        else:
+            self.log(f"Unknown generator type: {generator_type}, falling back to local", "warning")
+            return LocalNameGenerator()

@@ -2,10 +2,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uvicorn
-from agents.name_generator import name_generator_factory
+from agents.agent_manager import AgentManager
+from agents.brand_name_agent import BrandNameAgent
+from agents.name_generator import NameGeneratorAgent
+from agents.domain_checker_agent import DomainCheckerAgent
+from agents.ltd_checker import LTDCheckerAgent
+from models.schemas import (
+    NameRequest, 
+    DomainAvailabilityResponse, 
+    BrandNameResponse
+)
 import os
 import logging
 
@@ -26,41 +34,84 @@ frontend_static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".
 # Mount static files
 app.mount("/static", StaticFiles(directory=frontend_static_dir), name="static")
 
-class NameRequest(BaseModel):
-    industry: str
-    keywords: List[str]
-    tone: str
-    audience: Optional[str] = None
-    generator_type: str = "local"  # Changed from model_type to generator_type
-
 @app.get("/")
 async def read_root():
     return FileResponse(os.path.join(frontend_static_dir, "index.html"))
 
-@app.post("/generate-names")
-async def generate_names(request: NameRequest):
+@app.post("/generate-brand-names")
+async def generate_brand_names(request: NameRequest):
+    """
+    Generate brand names without checking availability
+    """
     try:
-        # Create the appropriate name generator
-        generator = name_generator_factory.create_generator(request.generator_type)
+        brand_name_agent = BrandNameAgent()
+        # Use the brand name agent to generate names only
+        result = brand_name_agent.execute({
+            "industry": request.industry,
+            "keywords": request.keywords,
+            "tone": request.tone,
+            "audience": request.audience,
+            "generator_type": request.generator_type
+        })
         
-        # Generate names
-        names = generator.generate_names(
-            request.industry,
-            request.keywords,
-            request.tone,
-            request.audience
+        # Calculate total count of names
+        total_count = len(result.get("names", {}))
+        
+        return BrandNameResponse(
+            names=result.get("names", {}),
+            total_count=total_count
         )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/agents")
+async def list_agents():
+    """
+    List all available agents
+    """
+    try:
+        agent_manager = AgentManager()
+        return {"agents": agent_manager.list_agents()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/check-domain")
+async def check_domain(request: Dict[str, str]):
+    """
+    Check domain availability for a single name
+    """
+    try:
+        name = request.get("name")
+        if not name:
+            raise HTTPException(status_code=400, detail="Name is required")
         
-        logging.info(f"Generated names length is 100?: {len(names) == 100}")
-    
-        # Ensure we have exactly 100 names
-        while len(names) < 100:
-            # If we got fewer than 100 names, make another call to get more
-            additional_names = generator.generate_names(request.industry, request.keywords, request.tone, request.audience)
-            names.extend(additional_names[:100 - len(names)])  # Add only what's needed
+        domain_checker = DomainCheckerAgent()
+        result = domain_checker.execute({"names": [name]})
         
-        logging.info(f"Generated names FINAL LENGTH: {len(names)}")
-        return {"names": names}
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+            
+        return result["domain_results"].get(name, {})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/check-ltd")
+async def check_ltd(request: Dict[str, str]):
+    """
+    Check LTD availability for a single name
+    """
+    try:
+        name = request.get("name")
+        if not name:
+            raise HTTPException(status_code=400, detail="Name is required")
+        
+        ltd_checker = LTDCheckerAgent()
+        result = ltd_checker.execute({"names": [name]})
+        
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+            
+        return result["ltd_results"].get(name, {})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -69,7 +120,7 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        ssl_keyfile="ssl/key.pem",
-        ssl_certfile="ssl/cert.pem",
+        ssl_keyfile="/Users/giorgos/Workspace/Projects/ssl-certs/cursor/key.pem",
+        ssl_certfile="/Users/giorgos/Workspace/Projects/ssl-certs/cursor/cert.pem",
         reload=True
     )
