@@ -2,63 +2,98 @@ import requests
 import logging
 import os
 from dotenv import load_dotenv
-from typing import Dict, List, Tuple, Any
+from typing import Dict, Any, List
 from .base_agent import BaseAgent
 import random
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class LTDCheckerAgent(BaseAgent):
     """
-    Agent responsible for checking UK Companies House LTD name conflicts
+    Agent for checking UK Companies House LTD name conflicts
     """
     
     def __init__(self):
         """
         Initialize the LTD checker agent
         """
-        super().__init__("LTDChecker")
+        super().__init__()
         # Load environment variables
         load_dotenv()
         self.api_key = os.getenv("COMPANIES_HOUSE_API_KEY")
-        self.base_url = "https://api.companieshouse.gov.uk"
+        self.base_url = "https://api.company-information.service.gov.uk"
         self.mock_enabled = os.getenv("MOCK_LTD_CHECKS", "false").lower() == "true"
-        
-        if not self.api_key:
-            logger.error("No Companies House API key found in environment variables")
+        logger.info("LTDCheckerAgent initialized")
     
     def _get_mock_ltd_availability(self, name):
         """Generate mock LTD availability data"""
         return {
             "ltd_available": random.choice([True, False]),
-            "similar_companies": [
-                {"name": f"{name} Ltd", "number": f"{random.randint(10000000, 99999999)}"} 
-                for _ in range(random.randint(0, 3))
-            ] if random.choice([True, False]) else []
+            "similar_names": [f"{name} Ltd", f"{name} Limited"] if random.choice([True, False]) else []
         }
 
     def execute(self, request):
+        """
+        Execute the LTD name check
+        
+        Args:
+            request: Dictionary containing a single name to check
+            
+        Returns:
+            Dictionary with availability results
+        """
         try:
-            names = request.get("names", [])
-            if not names:
-                return {"error": "No names provided"}
-
-            results = {}
-            for name in names:
-                if self.mock_enabled:
-                    results[name] = self._get_mock_ltd_availability(name)
-                else:
-                    if not self.api_key:
-                        return {"error": "Companies House API key is required"}
+            name = request.get("name")
+            if not name:
+                return {"error": "No name provided"}
+            
+            if self.mock_enabled:
+                return self._get_mock_ltd_availability(name)
+            
+            if not self.api_key:
+                return {"error": "Companies House API key is required"}
+            
+            # Real API implementation
+            try:
+                response = requests.get(
+                    f"{self.base_url}/company-profile/search",
+                    params={"q": name},
+                    auth=(self.api_key, "")
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    items = data.get("items", [])
                     
-                    # Real API implementation here
-                    # ... existing code ...
-
-            return {"ltd_results": results}
+                    # Check if any company names are similar to the requested name
+                    similar_names = []
+                    for item in items:
+                        company_name = item.get("title", "").lower()
+                        if name.lower() in company_name or company_name in name.lower():
+                            similar_names.append(item.get("title", ""))
+                    
+                    return {
+                        "ltd_available": len(similar_names) == 0,
+                        "similar_names": similar_names
+                    }
+                else:
+                    logger.warning(f"Error checking LTD: {response.status_code}")
+                    logger.warning(f"Response: {response.text}")
+                    return {
+                        "ltd_available": False,
+                        "similar_names": [],
+                        "error": f"API returned status code {response.status_code}"
+                    }
+            except Exception as e:
+                logger.error(f"Exception checking LTD: {str(e)}")
+                return {
+                    "ltd_available": False,
+                    "similar_names": [],
+                    "error": str(e)
+                }
         except Exception as e:
-            logging.error(f"Exception checking LTD: {str(e)}")
+            logger.error(f"Exception checking LTD: {str(e)}")
             return {"error": str(e)}
     
     def check_ltd_conflict(self, name: str) -> bool:

@@ -2,16 +2,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from typing import List, Optional, Dict
+from typing import Dict
 import uvicorn
 from agents.agent_manager import AgentManager
 from agents.brand_name_agent import BrandNameAgent
-from agents.name_generator import NameGeneratorAgent
 from agents.domain_checker_agent import DomainCheckerAgent
 from agents.ltd_checker import LTDCheckerAgent
 from models.schemas import (
     NameRequest, 
-    DomainAvailabilityResponse, 
     BrandNameResponse
 )
 import os
@@ -38,13 +36,22 @@ app.mount("/static", StaticFiles(directory=frontend_static_dir), name="static")
 async def read_root():
     return FileResponse(os.path.join(frontend_static_dir, "index.html"))
 
+# Configure Agents
+agent_manager = AgentManager()
+brand_name_agent = BrandNameAgent()
+domain_checker_agent = DomainCheckerAgent()
+ltd_checker_agent = LTDCheckerAgent()
+
+agent_manager.register_agent(brand_name_agent)
+agent_manager.register_agent(domain_checker_agent)
+agent_manager.register_agent(ltd_checker_agent)
+
 @app.post("/generate-brand-names")
 async def generate_brand_names(request: NameRequest):
     """
     Generate brand names without checking availability
     """
     try:
-        brand_name_agent = BrandNameAgent()
         # Use the brand name agent to generate names only
         result = brand_name_agent.execute({
             "industry": request.industry,
@@ -70,7 +77,6 @@ async def list_agents():
     List all available agents
     """
     try:
-        agent_manager = AgentManager()
         return {"agents": agent_manager.list_agents()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -85,13 +91,12 @@ async def check_domain(request: Dict[str, str]):
         if not name:
             raise HTTPException(status_code=400, detail="Name is required")
         
-        domain_checker = DomainCheckerAgent()
-        result = domain_checker.execute({"names": [name]})
+        result = domain_checker_agent.execute({"name": name})
         
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
             
-        return result["domain_results"].get(name, {})
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -105,13 +110,12 @@ async def check_ltd(request: Dict[str, str]):
         if not name:
             raise HTTPException(status_code=400, detail="Name is required")
         
-        ltd_checker = LTDCheckerAgent()
-        result = ltd_checker.execute({"names": [name]})
+        result = ltd_checker_agent.execute({"name": name})
         
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
             
-        return result["ltd_results"].get(name, {})
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

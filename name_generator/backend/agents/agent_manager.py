@@ -24,8 +24,9 @@ class AgentManager:
         Args:
             agent: The agent to register
         """
-        self.agents[agent.name] = agent
-        logger.info(f"Registered agent: {agent.name}")
+        agent_name = agent.__class__.__name__
+        self.agents[agent_name] = agent
+        logger.info(f"Registered agent: {agent_name}")
     
     def get_agent(self, agent_name: str) -> BaseAgent:
         """
@@ -65,30 +66,31 @@ class AgentManager:
     
     def execute_agent_chain(self, agent_names: List[str], initial_data: Any = None) -> Any:
         """
-        Execute a chain of agents in sequence, passing the output of one to the input of the next
+        Execute a chain of agents in sequence
         
         Args:
-            agent_names: The names of the agents to execute in sequence
-            initial_data: The initial data to pass to the first agent
+            agent_names: List of agent names to execute in order
+            initial_data: Initial data to pass to the first agent
             
         Returns:
             The result of the last agent's execution
+            
+        Raises:
+            KeyError: If any agent is not found
         """
-        result = initial_data
-        
+        data = initial_data
         for agent_name in agent_names:
             agent = self.get_agent(agent_name)
             logger.info(f"Executing agent in chain: {agent_name}")
-            result = agent.execute(result)
-        
-        return result
+            data = agent.execute(data)
+        return data
     
     def list_agents(self) -> List[str]:
         """
-        Get a list of all registered agent names
+        List all registered agents
         
         Returns:
-            A list of agent names
+            List of agent names
         """
         return list(self.agents.keys())
 

@@ -274,7 +274,6 @@ class OllamaNameGenerator(NameGeneratorBase):
 
             logger.info(f"Generated {len(names)} names. Example: {names[:5]}")
             
-            
             return names
             
         except requests.exceptions.RequestException as e:
@@ -314,7 +313,7 @@ class NameGeneratorAgent(BaseAgent):
         Args:
             generator_type: The type of generator to use (local, openai, huggingface, ollama)
         """
-        super().__init__("NameGenerator")
+        super().__init__()
         self.generator_type = generator_type
         self.generator = self._create_generator(generator_type)
         self.log(f"Initialized with generator type: {generator_type}")

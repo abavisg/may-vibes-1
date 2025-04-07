@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import logging
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class BaseAgent(ABC):
@@ -11,15 +10,11 @@ class BaseAgent(ABC):
     This provides a common interface and shared functionality.
     """
     
-    def __init__(self, name: str = "Default Agent"):
+    def __init__(self):
         """
         Initialize the base agent
-        
-        Args:
-            name: The name of the agent
         """
-        self.name = name
-        logger.info(f"Initializing {self.name} agent")
+        logger.info(f"Initializing {self.__class__.__name__} agent")
     
     @abstractmethod
     def execute(self, *args, **kwargs):
@@ -40,7 +35,7 @@ class BaseAgent(ABC):
             level: The log level (info, warning, error, debug)
         """
         log_method = getattr(logger, level.lower(), logger.info)
-        log_method(f"[{self.name}] {message}")
+        log_method(f"[{self.__class__.__name__}] {message}")
     
     def __str__(self):
-        return f"{self.name} Agent" 
+        return f"{self.__class__.__name__} Agent" 
