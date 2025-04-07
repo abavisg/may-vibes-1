@@ -1,6 +1,19 @@
-# Brand Name Generator API
+# Brand Name Generator
 
-A FastAPI application that generates creative brand names using OpenAI's GPT models and checks domain availability and LTD name conflicts using a multi-agent architecture.
+A web application that generates creative brand names and checks domain availability and LTD name conflicts using a multi-agent architecture.
+
+## Features
+
+- **Name Generation**: Create unique brand names based on industry, keywords, tone, and target audience
+- **Multiple Generation Models**: Choose from different name generation models:
+  - Local Pattern Generator (fastest, no API key required)
+  - OpenAI GPT-3.5 Turbo (most creative, requires API key)
+  - Hugging Face SmollAgent (good balance, requires API key)
+  - Ollama Mistral (local LLM, requires Ollama installation)
+- **Domain Availability Check**: Check if domain names are available across multiple TLDs (.com, .co.uk)
+- **LTD Name Conflict Check**: Check if company names are available for UK Companies House registration
+- **Visual Status Indicators**: Color-coded status indicators for domain and LTD availability
+- **Interactive UI**: Modern, responsive interface with tooltips and real-time feedback
 
 ## Setup
 
@@ -19,6 +32,8 @@ A FastAPI application that generates creative brand names using OpenAI's GPT mod
    OPENAI_API_KEY=your_api_key_here
    DOMAINR_API_KEY=your_domainr_api_key_here
    COMPANIES_HOUSE_API_KEY=your_companies_house_api_key_here
+   MOCK_DOMAIN_CHECKS=false
+   MOCK_LTD_CHECKS=false
    ```
 
 ## Running the Application
@@ -26,16 +41,17 @@ A FastAPI application that generates creative brand names using OpenAI's GPT mod
 Run the application using uvicorn:
 
 ```bash
-uvicorn main:app --reload --port 8000
+cd name_generator/backend
+uvicorn main:app --reload --port 8000 --ssl-keyfile=/path/to/key.pem --ssl-certfile=/path/to/cert.pem
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `https://localhost:8000`
 
 ## API Endpoints
 
-### POST /generate-names
+### POST /generate-brand-names
 
-Generates 100 brand name ideas based on the provided criteria.
+Generates brand name ideas based on the provided criteria.
 
 Request body:
 ```json
@@ -51,143 +67,78 @@ Request body:
 Response:
 ```json
 {
-    "names": ["string"]
+    "names": {
+        "name1": {},
+        "name2": {},
+        "name3": {}
+    },
+    "total_count": 3
 }
 ```
 
-### POST /check-domains
+### POST /check-domain
 
-Checks domain availability for a list of domain names.
+Checks domain availability for a single name.
 
 Request body:
 ```json
-["domain1", "domain2", "domain3"]
+{
+    "name": "string"
+}
 ```
 
 Response:
 ```json
 {
-    "names": {
-        "domain1": true,
-        "domain2": false,
-        "domain3": true
-    },
-    "available_count": 2,
-    "total_count": 3
+    "domain_available": true,
+    "available_domains": ["name.com", "name.co.uk"]
 }
 ```
 
 ### POST /check-ltd
 
-Checks LTD name conflicts for a list of names.
-
-Request body:
-```json
-["name1", "name2", "name3"]
-```
-
-Response:
-```json
-{
-    "names": {
-        "name1": true,
-        "name2": false,
-        "name3": true
-    },
-    "available_count": 2,
-    "total_count": 3
-}
-```
-
-### POST /generate-brand-names
-
-Generates brand names and checks domain availability and LTD conflicts in one step.
+Checks LTD name conflicts for a single name.
 
 Request body:
 ```json
 {
-    "industry": "string",
-    "keywords": ["string"],
-    "tone": "string",
-    "audience": "string" (optional),
-    "generator_type": "string" (optional, default: "local")
+    "name": "string"
 }
 ```
 
 Response:
 ```json
 {
-    "names": {
-        "name1": {
-            "domain_available": true,
-            "ltd_available": true,
-            "fully_available": true
-        },
-        "name2": {
-            "domain_available": false,
-            "ltd_available": true,
-            "fully_available": false
-        },
-        "name3": {
-            "domain_available": true,
-            "ltd_available": false,
-            "fully_available": false
-        }
-    },
-    "domain_available_count": 2,
-    "ltd_available_count": 2,
-    "fully_available_count": 1,
-    "total_count": 3
+    "ltd_available": true,
+    "similar_names": []
 }
 ```
 
-### GET /agents
+## Architecture
 
-Lists all available agents in the system.
+The application uses a multi-agent architecture:
 
-Response:
-```json
-{
-    "agents": ["NameGenerator", "DomainChecker", "LTDChecker", "BrandName"]
-}
-```
+- **BrandNameAgent**: Generates brand names based on user criteria
+- **DomainCheckerAgent**: Checks domain availability across multiple TLDs
+- **LTDCheckerAgent**: Checks for name conflicts with UK Companies House
 
-## Multi-Agent Architecture
+## Frontend
 
-The application uses a multi-agent architecture to handle different aspects of the brand name generation process:
+The frontend is built with HTML, CSS, and JavaScript, using Tailwind CSS for styling. It provides:
 
-1. **NameGenerator Agent**: Generates creative brand names based on the provided criteria.
-2. **DomainChecker Agent**: Checks domain availability for the generated names.
-3. **LTDChecker Agent**: Checks LTD name conflicts for the generated names.
-4. **BrandName Agent**: Orchestrates the entire process, combining the results from all agents.
+- A form for entering name generation criteria
+- A model selector for choosing the generation method
+- Results display with color-coded availability indicators
+- Tooltips showing detailed availability information
+- Manual check buttons for domain and LTD availability
 
-Each agent is responsible for a specific task and can be used independently or as part of the complete process.
+## Feature Flags
 
-## API Keys
+The application supports feature flags for testing and development:
 
-### Domainr API
+- `MOCK_DOMAIN_CHECKS`: Set to `true` to use mock data for domain checks
+- `MOCK_LTD_CHECKS`: Set to `true` to use mock data for LTD checks
 
-The application uses the Domainr API to check domain availability. If no API key is provided, it will fall back to a simulated check (not accurate).
+## License
 
-To get a Domainr API key:
-1. Sign up at https://domainr.com/
-2. Navigate to the API section
-3. Generate an API key
-4. Add the key to your `.env` file
-
-### Companies House API
-
-The application uses the Companies House API to check LTD name conflicts. If no API key is provided, it will fall back to a simulated check (not accurate).
-
-To get a Companies House API key:
-1. Sign up at https://developer.company-information.service.gov.uk/
-2. Create a new application
-3. Generate an API key
-4. Add the key to your `.env` file
-
-## API Documentation
-
-FastAPI automatically generates API documentation. Once the server is running, you can access:
-
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+MIT

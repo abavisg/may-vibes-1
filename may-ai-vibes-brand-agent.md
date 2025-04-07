@@ -10,7 +10,7 @@
 This project covers:
 
 1. **User Input**: Brief for the brand (industry, keywords, tone, audience).
-2. **AI Name Generation**: 100 creative brand name ideas using OpenAI.
+2. **AI Name Generation**: 100 creative brand name ideas using an LLM (OpenAI, HuggingFace, Llama).
 3. **.com Domain Availability Check**: Using Domainr API (or fallback).
 4. **UK Companies House LTD Conflict Check**: Via official UK API.
 5. **Return Result**: A list of names with domain + LTD status flags.
@@ -96,7 +96,66 @@ Also scaffold a README with how to run the app locally with uvicorn.
 
 ---
 
-## 📢 Planned LinkedIn Post (Draft)
+
+
+
+
+🧠 May AI Vibes – Brand Name Generator Agent
+
+A smart and flexible web app that generates unique brand name ideas and checks domain and UK LTD name availability—powered by a multi-agent system.
+
+🚀 What It Does
+	•	✨ Name Generation
+Create standout brand names tailored to your industry, keywords, tone, and audience.
+	•	🧠 Multiple Models Available
+Choose your generator:
+	•	Local Pattern Generator (fast, no API key)
+	•	OpenAI GPT-3.5 Turbo (most creative, needs API key)
+	•	Hugging Face SmollAgent (balanced, needs API key)
+	•	Ollama Mistral (offline/local, requires Ollama)
+	•	🌐 Domain Checker
+Instantly see domain availability across TLDs like .com, .co.uk, etc.
+	•	🏢 UK LTD Name Checker
+Checks for conflicts in UK Companies House records.
+	•	🔵 Real-Time Visual Feedback
+Color-coded indicators show what’s available and what’s not.
+	•	🖥️ Modern UI
+Interactive, responsive interface with tooltips and real-time updates.
+
+⸻
+
+📘 Description
+
+This agent is part of the #may-ai-vibes series — a month-long exploration of building AI-powered micro-tools. This one focuses on the very beginning of any business journey: naming.
+
+🎯 Scope
+
+The app helps generate brand names tailored to the user’s industry, tone, keywords, and optionally their target audience. It checks domain name availability and UK LTD name conflicts to help validate the best options.
+
+⚙️ Behaviour
+	•	Accepts user input via a modern web UI
+	•	Generates names using selectable models (local, OpenAI, Hugging Face, Ollama)
+	•	Calls APIs to check .com and .co.uk domain availability
+	•	Checks UK Companies House for LTD conflicts
+	•	Displays results with color-coded indicators for instant feedback
+
+📅 Development Progress
+	•	✅ Setup multi-agent architecture
+	•	✅ Built FastAPI backend
+	•	✅ Integrated name generators (local + OpenAI + HF + Ollama)
+	•	✅ Built domain + LTD checker agents
+	•	✅ Designed frontend
+
+🧱 Tech Stack
+	•	Frontend: HTML, Vanilla JS, Tailwind CSS
+	•	Backend: Python, FastAPI, Uvicorn
+	•	Agents: Custom logic for name generation, domain, and LTD checks
+	•	APIs: Domainr, Companies House
+	•	Models: OpenAI GPT-3.5 Turbo, Hugging Face SmollAgent, Ollama Mistral
+
+⸻
+
+📢 LinkedIn Post
 
 > Day X of #may-ai-vibes  
 >  
@@ -109,9 +168,8 @@ Also scaffold a README with how to run the app locally with uvicorn.
 >  
 > #buildinpublic #aiagents #founderstack #may-ai-vibes
 
----
-
-## ✍️ Blog Post (Coming Soon)
+✍️ Blog Post
 
 _Title_: **From Idea to Identity in Minutes – Building an AI Naming Agent in Cursor**  
 _Link_: _Coming soon after full project completion_
+
