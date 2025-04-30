@@ -2,8 +2,6 @@
 
 A web application that generates creative brand names and checks domain availability and LTD name conflicts using a multi-agent architecture.
 
----
-
 ## Features
 
 - **Name Generation** – Create unique brand names based on industry, keywords, tone, and target audience.
@@ -16,8 +14,6 @@ A web application that generates creative brand names and checks domain availabi
 - **Visual Indicators** – Color-coded results for quick status recognition.
 - **Interactive UI** – Responsive frontend with tooltips and manual override options.
 
----
-
 ## Tech stack
 
 - Python (FastAPI, Uvicorn)
@@ -26,16 +22,12 @@ A web application that generates creative brand names and checks domain availabi
 - OpenAI API, Hugging Face, Domainr API, Companies House API
 - Ollama (for local LLM integration)
 
----
-
 ## Architecture
 
 - **BrandNameAgent** – Generates brand names based on user inputs.
 - **DomainCheckerAgent** – Checks domain availability across TLDs.
 - **LTDCheckerAgent** – Checks for name conflicts on UK Companies House.
 - Frontend communicates with backend APIs to display and interact with data in real time.
-
----
 
 ## API Endpoints
 
@@ -65,8 +57,6 @@ Generates brand name ideas.
 }
 ```
 
----
-
 ### POST `/check-domain`
 Checks domain availability.
 
@@ -85,8 +75,6 @@ Checks domain availability.
 }
 ```
 
----
-
 ### POST `/check-ltd`
 Checks LTD name availability.
 
@@ -104,8 +92,6 @@ Checks LTD name availability.
   "similar_names": []
 }
 ```
-
----
 
 ## Setup the application
 
@@ -139,8 +125,6 @@ Checks LTD name availability.
    MOCK_LTD_CHECKS=false
    ```
 
----
-
 ## Run the application
 
 ```bash
@@ -150,7 +134,6 @@ uvicorn main:app --reload --port 8000 --ssl-keyfile=/path/to/key.pem --ssl-certf
 
 API available at: `https://localhost:8000`
 
----
 
 ## License
 
