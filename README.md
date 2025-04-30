@@ -13,7 +13,7 @@ A web application that generates creative brand names and checks domain availabi
 - **Domain Availability Check**: Check if domain names are available across multiple TLDs (.com, .co.uk)
 - **LTD Name Conflict Check**: Check if company names are available for UK Companies House registration
 - **Visual Status Indicators**: Color-coded status indicators for domain and LTD availability
-- **Interactive UI**: Modern, responsive interface with tooltips and real-time feedback
+- **Interactive UI**: Responsive interface with tooltips and real-time feedback
 
 ## Setup
 
