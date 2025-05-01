@@ -24,10 +24,14 @@ A web application that generates creative brand names and checks domain availabi
 
 ## Architecture
 
-- **BrandNameAgent** – Generates brand names based on user inputs.
-- **DomainCheckerAgent** – Checks domain availability across TLDs.
-- **LTDCheckerAgent** – Checks for name conflicts on UK Companies House.
-- Frontend communicates with backend APIs to display and interact with data in real time.
+This project is built as a **multi-agent system**:
+
+- **BrandNameAgent (AI Agent)** – Uses local algorithms or large language models (OpenAI, Hugging Face, Ollama) to generate creative brand names based on user input (industry, keywords, tone, audience). This is the core AI component of the system.
+- **DomainCheckerAgent (Utility Agent)** – Checks domain availability for generated names using the Domainr API (or mock mode for development/testing).
+- **LTDCheckerAgent (Utility Agent)** – Checks for company name conflicts on UK Companies House (or mock mode for development/testing).
+- **AgentManager** – Registers and coordinates all agents, providing a unified interface for the backend to interact with them.
+
+The frontend communicates with the backend via API endpoints. The backend orchestrates the agents: it generates names using the AI agent, then validates them using the utility agents. This modular architecture makes it easy to extend or swap out agents for different tasks or data sources.
 
 ## API Endpoints
 
