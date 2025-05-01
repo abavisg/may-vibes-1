@@ -129,7 +129,7 @@ Checks LTD name availability.
 
 ```bash
 cd name_generator/backend
-uvicorn main:app --reload --port 8000 --ssl-keyfile=/path/to/key.pem --ssl-certfile=/path/to/cert.pem
+uvicorn main:app --reload --port 8000 --ssl-keyfile=/[PATH_TO_FILE]/key.pem --ssl-certfile=/[PATH_TO_FILE]/cert.pem
 ```
 
 API available at: `https://localhost:8000`
