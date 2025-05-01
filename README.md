@@ -134,6 +134,16 @@ uvicorn main:app --reload --port 8000 --ssl-keyfile=/[PATH_TO_FILE]/key.pem --ss
 
 API available at: `https://localhost:8000`
 
+### Frontend Development with Live Server (Auto-Reload)
+
+To develop the frontend with automatic browser refresh on file changes, use the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension for VS Code:
+
+1. Open the project in VS Code.
+2. Navigate to the folder: `name_generator/frontend/static/` in the VS Code file explorer.
+3. Right-click on `index.html` and select **"Open with Live Server"**.
+4. Your browser will open the frontend, and it will auto-update on every file change.
+
+> **Note:** Make sure your backend is running if you want to interact with the API.
 
 ## License
 
